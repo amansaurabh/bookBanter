@@ -8,13 +8,14 @@ import { useEffect, useState } from 'react'
 const MobileNav = ({ isAuth }: { isAuth: boolean }) => {
     const [isOpen, setOpen] = useState<boolean>(false)
 
-    const toggleOpen = () => setOpen((prev) => !prev)
+    const toggleOpen = () => setOpen(prev => !prev)
 
     const pathname = usePathname()
 
     useEffect(() => {
-        if (isOpen) toggleOpen()
-    }, [pathname, isOpen])
+        if (isOpen) setOpen(false)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pathname])
 
     const closeOnCurrent = (href: string) => {
         if (pathname === href) {
