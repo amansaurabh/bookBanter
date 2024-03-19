@@ -53,8 +53,7 @@ export const appRouter = router({
     })
   }),
 
-  createStripeSession: privateProcedure.mutation(
-    async ({ ctx }) => {
+  createStripeSession: privateProcedure.mutation(async ({ ctx }) => {
       const { userId } = ctx
 
       const billingUrl = absoluteUrl('/dashboard/billing')
@@ -90,7 +89,7 @@ export const appRouter = router({
         await stripe.checkout.sessions.create({
           success_url: billingUrl,
           cancel_url: billingUrl,
-          payment_method_types: ['card', 'paypal', 'afterpay_clearpay'],
+          payment_method_types: ['card'],
           mode: 'subscription',
           billing_address_collection: 'auto',
           line_items: [
