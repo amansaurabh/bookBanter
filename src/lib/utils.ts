@@ -21,7 +21,6 @@ export function constructMetadata({
   image = "/thumbnail.png",
   icons = "/favicon.ico",
   noIndex = false,
-  themeColor= '#FFF',
 }: {
   title?: string
   description?: string
@@ -57,6 +56,5 @@ export function constructMetadata({
         follow: false
       }
     }),
-    themeColor: themeColor
   }
 }

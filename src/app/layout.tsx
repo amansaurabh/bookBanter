@@ -12,6 +12,10 @@ import { Toaster } from '@/components/ui/toaster'
 
 const inter = Inter({ subsets: ['latin'] })
 
+export const viewport = {
+  themeColor: '#FFF',
+}
+
 export const metadata = constructMetadata()
 
 export default function RootLayout({
