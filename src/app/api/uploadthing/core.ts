@@ -13,13 +13,11 @@ import { PLANS } from '@/config/stripe';
 const f = createUploadthing();
 
 const middleware = async () => {
-   const { getUser } = getKindeServerSession()
-            const user = await getUser()
-
-          if (!user || !user.id) throw new Error('Unauthorize')
-          
-          const subscriptionPlan = await getUserSubscriptionPlan()
-    return { subscriptionPlan, userId: user.id};
+  const { getUser } = getKindeServerSession()
+  const user = await getUser()
+  if (!user || !user.id) throw new Error('Unauthorize')
+  const subscriptionPlan = await getUserSubscriptionPlan()
+  return { subscriptionPlan, userId: user.id};
 }
 
 const onUploadComplete = async ({
@@ -43,11 +41,11 @@ const onUploadComplete = async ({
 
   const createdFile = await db.file.create({
         data: {
-        key: file.key,
-        name: file.name,
-        userId: metadata.userId,
-        url: `https://uploadthing-prod.s3.us-west-2.amazonaws.com/${file.key}`,
-        uploadStatus: 'PROCESSING',
+          key: file.key,
+          name: file.name,
+          userId: metadata.userId,
+          url: `https://uploadthing-prod.s3.us-west-2.amazonaws.com/${file.key}`,
+          uploadStatus: 'PROCESSING',
         },
       })
 
@@ -65,17 +63,11 @@ const onUploadComplete = async ({
  const { subscriptionPlan } = metadata
     const { isSubscribed } = subscriptionPlan
 
-    const isProExceeded =
-      pagesAmt >
-      PLANS.find((plan) => plan.name === 'Pro')!.pagesPerPdf
-    const isFreeExceeded =
-      pagesAmt >
-      PLANS.find((plan) => plan.name === 'Free')!
-        .pagesPerPdf
+    const isProExceeded = pagesAmt > PLANS.find((plan) => plan.name === 'Pro')!.pagesPerPdf
+    const isFreeExceeded = pagesAmt > PLANS.find((plan) => plan.name === 'Free')!.pagesPerPdf
 
     if (
-      (isSubscribed && isProExceeded) ||
-      (!isSubscribed && isFreeExceeded)
+      (isSubscribed && isProExceeded) || (!isSubscribed && isFreeExceeded)
     ) {
       await db.file.update({
         data: {
@@ -129,9 +121,7 @@ const onUploadComplete = async ({
 export const ourFileRouter = {
 
   freePlanUploader: f({ pdf: { maxFileSize: "4MB" } })
-
     .middleware(middleware)
-    
     .onUploadComplete(onUploadComplete),
   
   proPlanUploader: f({ pdf: { maxFileSize: '16MB' } })
