@@ -1,23 +1,23 @@
-import { db } from '@/db';
+import { db } from '@/db'
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server'
-import { createUploadthing, type FileRouter } from "uploadthing/next";
+import { createUploadthing, type FileRouter } from "uploadthing/next"
 
-import { PDFLoader } from 'langchain/document_loaders/fs/pdf'
+import { PDFLoader } from "langchain/document_loaders/fs/pdf"
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai'
 import { PineconeStore } from 'langchain/vectorstores/pinecone'
 
 import { pinecone } from '@/lib/pinecone';
-import { getUserSubscriptionPlan } from '@/lib/stripe';
-import { PLANS } from '@/config/stripe';
+import { getUserSubscriptionPlan } from '@/lib/stripe'
+import { PLANS } from '@/config/stripe'
 
-const f = createUploadthing();
+const f = createUploadthing()
 
 const middleware = async () => {
   const { getUser } = getKindeServerSession()
   const user = await getUser()
-  if (!user || !user.id) throw new Error('Unauthorize')
+  if (!user || !user.id) throw new Error('Unauthorized')
   const subscriptionPlan = await getUserSubscriptionPlan()
-  return { subscriptionPlan, userId: user.id};
+  return { subscriptionPlan, userId: user.id}
 }
 
 const onUploadComplete = async ({
@@ -60,24 +60,25 @@ const onUploadComplete = async ({
 
         const pagesAmt = pageLevelDocs.length
 
- const { subscriptionPlan } = metadata
-    const { isSubscribed } = subscriptionPlan
+        const { subscriptionPlan } = metadata
+        const { isSubscribed } = subscriptionPlan
 
-    const isProExceeded = pagesAmt > PLANS.find((plan) => plan.name === 'Pro')!.pagesPerPdf
-    const isFreeExceeded = pagesAmt > PLANS.find((plan) => plan.name === 'Free')!.pagesPerPdf
-
-    if (
-      (isSubscribed && isProExceeded) || (!isSubscribed && isFreeExceeded)
-    ) {
-      await db.file.update({
-        data: {
-          uploadStatus: 'FAILED',
-        },
-        where: {
-          id: createdFile.id,
-        },
-      })
-    }
+        const isProExceeded = pagesAmt > PLANS.find((plan) => plan.name === 'Pro')!.pagesPerPdf
+        const isFreeExceeded = pagesAmt > PLANS.find((plan) => plan.name === 'Free')!.pagesPerPdf
+  
+      if (
+        (isSubscribed && isProExceeded) || (!isSubscribed && isFreeExceeded)
+      ) {
+        console.log("Inside if block");
+        await db.file.update({
+          data: {
+            uploadStatus: 'FAILED',
+          },
+          where: {
+            id: createdFile.id,
+          },
+        })
+      }
 
         // vectorize and index entire document
         
@@ -95,15 +96,17 @@ const onUploadComplete = async ({
             namespace: createdFile.id,
           }
         )
-        
-        await db.file.update({
+        if (
+        (isSubscribed && !isProExceeded) || (!isSubscribed && !isFreeExceeded)
+      ) 
+        {await db.file.update({
         data: {
           uploadStatus: 'SUCCESS',
         },
         where: {
           id: createdFile.id,
         },
-    })
+    })}
       } catch (error) {
         console.log("Pinecone", error);
         await db.file.update({
@@ -120,13 +123,13 @@ const onUploadComplete = async ({
 
 export const ourFileRouter = {
 
-  freePlanUploader: f({ pdf: { maxFileSize: "4MB" } })
+  freePlanUploader: f({ pdf: { maxFileSize: '4MB' } })
     .middleware(middleware)
     .onUploadComplete(onUploadComplete),
   
   proPlanUploader: f({ pdf: { maxFileSize: '16MB' } })
     .middleware(middleware)
     .onUploadComplete(onUploadComplete),
-} satisfies FileRouter;
+} satisfies FileRouter
  
 export type OurFileRouter = typeof ourFileRouter;

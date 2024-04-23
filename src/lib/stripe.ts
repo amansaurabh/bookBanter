@@ -12,7 +12,6 @@ export async function getUserSubscriptionPlan() {
     const { getUser } = getKindeServerSession()
     const user = await getUser()
     
-
   if (!user || !user.id) {
     return {
       ...PLANS[0],
