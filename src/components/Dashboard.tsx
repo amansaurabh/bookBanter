@@ -15,6 +15,8 @@ import { format } from 'date-fns'
 import { Button } from "./ui/button"
 import { useState } from "react"
 import { getUserSubscriptionPlan } from "@/lib/stripe"
+import Search from "./Search"
+import { useSearchParams } from 'next/navigation'
 
 interface Pageprops {
     subscriptionPlan: Awaited<ReturnType<typeof getUserSubscriptionPlan>>
@@ -26,7 +28,10 @@ const Dashboard = ({ subscriptionPlan }: Pageprops) => {
     // const utils = trpc.useContext()  
     const utils = trpc.useUtils() // trpc.useContext() is deprecated so I am using useUtils
 
-    const { data: files, isLoading } = trpc.getUserFiles.useQuery()
+    const searchParams = useSearchParams();
+    const query = searchParams.get('search') ?? '';
+
+    const { data: files, isLoading } = trpc.getUserFiles.useQuery({ query })
 
     const { mutate: deleteFile } =
         trpc.deleteFile.useMutation({
@@ -47,6 +52,7 @@ const Dashboard = ({ subscriptionPlan }: Pageprops) => {
                 <h1 className='mb-3 font-bold text-5xl text-gray-900'>
                     My Files
                 </h1>
+                <Search search={query} />
                 <UploadButton isSubscribed={subscriptionPlan.isSubscribed} />
             </div>
 

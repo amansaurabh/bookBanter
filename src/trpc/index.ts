@@ -13,6 +13,11 @@ import {
 import { PLANS } from '@/config/stripe'
 import { absoluteUrl } from "@/lib/utils";
 
+type NameFilter = {
+  contains: string;
+  mode: 'insensitive';
+};
+
 export const appRouter = router({
   authCallback: publicProcedure.query(async() => {
     const { getUser } = getKindeServerSession()
@@ -42,15 +47,37 @@ export const appRouter = router({
     
     return { success: true }
   }),
+  
+  getUserFiles: privateProcedure
+  .input(z.object({
+    query: z.string().optional(),
+  }))
+  .query(async ({ ctx, input }) => {
+    const { userId } = ctx;
+    const { query } = input;
 
-  getUserFiles: privateProcedure.query(async ({ ctx }) => {
-    const { userId } = ctx
+    let whereCondition: {
+      userId: string;
+      name?: NameFilter;
+    } = {
+      userId,
+    };
+
+    if (query) {
+      const lowercaseQuey = query.toLowerCase();
+
+      whereCondition = {
+        ...whereCondition,
+        name: {
+          contains: lowercaseQuey,
+          mode: 'insensitive',
+        },
+      };
+    }
 
     return await db.file.findMany({
-      where: {
-        userId,
-      },
-    })
+      where: whereCondition,
+    });
   }),
 
   createStripeSession: privateProcedure.mutation(async ({ ctx }) => {
